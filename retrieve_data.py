@@ -1,0 +1,47 @@
+import cdsapi
+import zipfile
+import os
+
+c = cdsapi.Client()
+
+def retrieve_data(temp_res, experiment, variable, model, date):
+
+    '''
+    Function to retrieve data from the Copernicus Climate Data Store.
+    temp_res: 'monthly'
+    experiment: 'ssp5_8_5' / 'ssp1_2_6'
+    variable: 'surface_temperature'
+    model: 'hadgem3_gc31_ll'
+    date: '2015-01-01/2099-12-31'
+    '''
+
+    file_name = f'./download_{model}_{experiment}.zip'
+
+    c.retrieve(
+        'projections-cmip6',
+        {
+            'format': 'zip',
+            'temporal_resolution': temp_res,
+            'experiment': experiment,
+            'level': 'single_levels',
+            'variable': variable,
+            'model': model,
+            'date': date,
+        },
+        file_name)
+
+    with zipfile.ZipFile(file_name, 'r') as zip_ref:      
+        zip_ref.extractall('data')
+    os.remove(filename)
+
+    dir = os.fsencode(path = 'data')
+    for file in os.listdir(dir):
+        filename = os.fsdecode(file)
+        if filename.endswith('.nc'):
+            os.rename(filename, f'{model}_{experiment}.nc')
+        else:
+            os.remove(filename)
+
+    
+if __name__ == "__main__":
+    retrieve_data('monthly', 'ssp5_8_5', 'surface_temperature', 'hadgem3_gc31_ll', '2015-01-01/2099-12-31')
