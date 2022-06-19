@@ -1,9 +1,3 @@
-import cdsapi
-import zipfile
-import os
-
-c = cdsapi.Client()
-
 def retrieve_data(temp_res, experiment, variable, model, date):
 
     '''
@@ -14,6 +8,12 @@ def retrieve_data(temp_res, experiment, variable, model, date):
     model: 'hadgem3_gc31_ll'
     date: '2015-01-01/2099-12-31'
     '''
+
+    import cdsapi
+    import zipfile
+    import os
+
+    c = cdsapi.Client()
 
     file_name = f'./download_{model}_{experiment}.zip'
 
@@ -36,7 +36,6 @@ def retrieve_data(temp_res, experiment, variable, model, date):
     os.remove(file_name)
     print("Zipped file removed")
 
-
     dir = os.fsencode('data')
     for file in os.listdir(dir):
         filename = os.fsdecode(file)
@@ -46,6 +45,9 @@ def retrieve_data(temp_res, experiment, variable, model, date):
             os.remove(f'data/{filename}')
     os.rmdir('data')
 
-    
+    data_fn = f'{model}_{experiment}_data.nc'
+    return data_fn
+
+
 if __name__ == "__main__":
     retrieve_data('monthly', 'ssp5_8_5', 'surface_temperature', 'hadgem3_gc31_ll', '2015-01-01/2099-12-31')
