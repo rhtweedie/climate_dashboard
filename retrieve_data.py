@@ -32,14 +32,17 @@ def retrieve_data(temp_res, experiment, variable, model, date):
 
     with zipfile.ZipFile(file_name, 'r') as zip_ref:      
         zip_ref.extractall('data')
+        print("Data files extracted")
     os.remove(file_name)
+    print("Zipped file removed")
+
 
     dir = os.fsencode('data')
     for file in os.listdir(dir):
         filename = os.fsdecode(file)
         if filename.endswith('.nc'):
-            os.rename(f'data/{filename}', f'{model}_{experiment}.nc')
-        elif filename.endswith(('.json', '.png')):
+            os.rename(f'data/{filename}', f'{model}_{experiment}_data.nc')
+        else:
             os.remove(f'data/{filename}')
     os.rmdir('data')
 
