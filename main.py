@@ -30,17 +30,33 @@ from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import xarray as xr
+from retrieve_data import retrieve_data
+from math import (floor, ceil)
 
 
-# Read data into arrays or xarray
 
-# read SSP5_8.5 data
+##########################################################################################################################################################################################
+# Prepare data                                                                                                                                                                           #
+##########################################################################################################################################################################################
 
-ncset = netcdf('ts_Amon_HadGEM3-GC31-LL_ssp585_r1i1p1f3_gn_20150116-20991216_v20200114.nc', mode='r')
 
-# check which variables are in the netcdf files
+# define constant variables
+TEMP_RES = 'monthly'
+EXPERIMENT = 'ssp5_8_5'
+VARIABLE = 'surface_temperature'
+MODEL = 'hadgem3_gc31_ll'
+DATE = '2015-01-01/2099-12-31'
+
+
+# retrieve data
+data_fn = retrieve_data(TEMP_RES, EXPERIMENT, VARIABLE, MODEL, DATE)
+ncset = netcdf(data_fn, mode='r')
+
+
+# check which variables are in the netcdf file
 print(ncset.variables)
 ncset.set_auto_mask(False)
+
 
 # read variables
 lon = ncset['lon'][:]
@@ -54,85 +70,31 @@ ncset.close()
 try:
     t_cal = ncset.variables['time'].calendar
     t_cal = nctime.calendar
-except AttributeError:  # Attribute doesn't exist
-    t_cal = u"360_day"  # or standard
+except AttributeError:
+    t_cal = u"360_day"
 
 datevar = cftime.num2date(nctime, units=t_unit, calendar=t_cal)
 
-# lon lat on a grid
-[lon, lat] = meshgrid(lon, lat)
-
-
-# read SSP1_2.6 data
-
-ncset126 = netcdf('ts_Amon_HadGEM3-GC31-LL_ssp126_r1i1p1f3_gn_20150116-20991216_v20200114.nc', mode='r')
-
-# check which variables are in the netcdf files
-#print(ncset126.variables)
-ncset126.set_auto_mask(False)
-
-# read variables
-lon126 = ncset126['lon'][:]
-lat126 = ncset126['lat'][:]
-t126 = ncset126['time'][:]
-ts126 = ncset126['ts'][:]
-nctime126 = ncset126.variables['time'][:]
-t_unit126 = ncset126.variables['time'].units
-ncset126.close()
-
-try:
-    t_cal126 = ncset126.variables['time'].calendar
-    t_cal126 = nctime126.calendar
-except AttributeError:  # Attribute doesn't exist
-    t_cal126 = u"360_day"  # or standard
-
-datevar = cftime.num2date(nctime126, units=t_unit, calendar=t_cal)
 
 # lon lat on a grid
-[lon126, lat126] = meshgrid(lon126, lat126)
+[lon, lat] = np.meshgrid(lon, lat)
 
 # print first and last dates, for later reference
 print(datevar[0])
 print(datevar[-1])
 
-
-# load SSP5_8.5 data
-import xarray as xr
-ds = xr.open_dataset('ts_Amon_HadGEM3-GC31-LL_ssp585_r1i1p1f3_gn_20150116-20991216_v20200114.nc')
+# load data
+ds = xr.open_dataset(data_fn)
 lat = ds.lat
 lon = ds.lon
-
 ds_y = ds.groupby('time.year').mean(dim='time')
 
-# load SSP1_2.6 data
-import xarray as xr
-ds126 = xr.open_dataset('ts_Amon_HadGEM3-GC31-LL_ssp126_r1i1p1f3_gn_20150116-20991216_v20200114.nc')
-lat126 = ds126.lat
-lon126 = ds126.lon
-
-ds126_y = ds126.groupby('time.year').mean(dim='time')
 
 
+##########################################################################################################################################################################################
+# Plot data                                                                                                                                                                              #
+##########################################################################################################################################################################################
 
-#Plotting the data on maps using cartopy with xarray functionalities or not
-
-# plot data and coastlines on Plate Carree projection
-
-ax = plt.axes(projection=ccrs.PlateCarree())
-ax.set_global()
-ax.coastlines()
-ax.contourf(lon,lat,ts[0],vmin=250,vmax=290, zorder=-3) #no need to specify transform because simplest projection
-ax.set_title('Global Temperature - Plate Carree Projection')
-
-
-# data and coastlines on Rotated Pole projection
-
-projection = ccrs.RotatedPole(pole_longitude=-177.5, pole_latitude=37.5)
-ax = plt.axes(projection=projection,)
-ax.set_global()
-ax.coastlines()
-ax.contourf(lon,lat,ts[0],vmin=250,vmax=290, transform=ccrs.PlateCarree(), zorder = -3)
-ax.set_title('Global Temperature - Rotated Pole Projection')
 
 
 # Plot data on two other projections. Initially five projections were chosen, however this took a long time to process, so two were selected.
@@ -293,65 +255,7 @@ ax2.set_title('Temperature standard deviation 2015-2099')
 
 # Plotting trend maps with significance using hatchingg
 
-
-def cal_trend(start_year, num_years, start_month, num_months, nx, ny, var):
-
-    '''
-    Function to calculate the spatial mean of one field and write the trends in .dat files
-    returns
-            ---> trend_time[year]
-            ---> trend_space[x,y]
-    Similar code by Alek Petty
-    '''
-
-    # Initialize
-        x = nx
-        y = ny
-
-    ##################
-    # Maps of trends
-    ##################
-
-    # Monthly averaged
-        num_years
-        years = np.arange(num_years)
-        trend_ym = np.zeros((num_months, x, y))
-        sig_a_ym = np.zeros((num_months, x, y))
-        r_a_ym = np.zeros((num_months, x, y))
-        int_a_ym = np.zeros((num_months, x, y))
-
-        for month in range(num_months):
-                print (month)
-                var_y = np.mean(var,1)
-                for i in range(x):
-                        for j in range(y):
-                                slope, intercept, r, prob, stderr = stats.linregress(years,var[start_year:start_year+num_years, month, i, j])
-                                trend_ym[month, i, j] = slope
-                                sig_a_ym[month, i, j] = 100*(1-prob)
-                                r_a_ym[month, i, j] = r
-                                int_a_ym[month, i, j] = intercept
-
-    # Yearly averaged
-        years = np.arange(num_years)
-        trend = np.zeros((x, y))
-        sig_a = np.zeros((x, y))
-        r_a = np.zeros((x, y))
-        int_a = np.zeros((x, y))
-
-        for i in range(x):
-                for j in range(y):
-                        slope, intercept, r, prob, stderr = stats.linregress(years,var_y[start_year:start_year+num_years, i, j])
-                        trend[i, j] = slope
-                        sig_a[i, j] = 100*(1-prob)
-                        r_a[i, j] = r
-                        int_a[i, j] = intercept
-
-        return trend, trend_ym, sig_a, sig_a_ym, r_a, r_a_ym, int_a, int_a_ym
-
-
-
 # Putting the data in the right format for the cal_trend function:
-
 start_year=2015-2015
 num_years=85
 start_month=0
