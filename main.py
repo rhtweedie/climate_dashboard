@@ -31,7 +31,9 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import xarray as xr
 from retrieve_data import retrieve_data
-from math import (floor, ceil)
+from math import floor, ceil
+from plots import all_data_plate_carree, all_data_rotated_pole, multiple_projections, diff_between_dates, plot_monthly_trends, plot_average_diff
+from cal_trend import cal_trend
 
 
 
@@ -96,136 +98,14 @@ ds_y = ds.groupby('time.year').mean(dim='time')
 ##########################################################################################################################################################################################
 
 
-
-# Plot data on two other projections. Initially five projections were chosen, however this took a long time to process, so two were selected.
-
-# load projections
-projections = [ccrs.Robinson(),
-               ccrs.InterruptedGoodeHomolosine()
-              ]
-# for other projections, just in case: ccrs.Mercator(), ccrs.Orthographic(), ccrs.PlateCarree()
-
-ts_test = ds.ts.sel(time='2015-01-16', method='nearest')
-
-# plot data
-for proj in projections:
-    plt.figure()
-    ax = plt.axes(projection=proj)
-    ax.coastlines()
-    ax.gridlines()
-    ts_test.plot(ax=ax, transform=ccrs.PlateCarree(),
-             vmin=250, vmax=290, cbar_kwargs={'shrink': 0.4}, zorder=-1)
-
-    ax.set_title(f'{type(proj)}')
+all_data_plate_carree(lon, lat, ts, "Global Temperature: Plate Carree")
+all_data_rotated_pole(lon, lat, ts, "Global Temperature: Rotated Pole")
+multiple_projections([ccrs.Robinson(), ccrs.InterruptedGoodeHomolosine()], ds)
+diff_between_dates(ds, datevar)
+plot_monthly_trends(ds, datevar)
+plot_average_diff(ds_y)
 
 
-# Plot data from the first and last months in dataset (01/2015 and 12/2099 respectively), and the difference between these:
-
-# calculate and plot difference between first and last months
-
-date_years=[datevar[0],datevar[-1]]
-
-for year in date_years:
-    ts_test = ds.ts.sel(time=year, method='nearest')
-    fig = plt.figure(figsize=(9,6))
-    ax = plt.axes(projection=ccrs.Mercator())
-    ax.coastlines()
-    ax.gridlines()
-    ts_test.plot(ax=ax, transform=ccrs.PlateCarree(),
-             vmin=250, vmax=290, cbar_kwargs={'shrink': 0.4}, zorder=-3)
-
-ts_test_2 = ds.ts.sel(time=date_years[1], method='nearest')
-ts_test_1 = ds.ts.sel(time=date_years[0], method='nearest')
-fig = plt.figure(figsize=(9,6))
-ax = plt.axes(projection=ccrs.Mercator())
-ax.coastlines()
-ax.gridlines()
-ax.set_title('difference')
-(ts_test_2-ts_test_1).plot(ax=ax, transform=ccrs.PlateCarree(),
-         vmin=-3, vmax=3, cbar_kwargs={'shrink': 0.4}, zorder=-3)
-plt.title('difference: '+str(datevar[0])+' vs '+str(datevar[-1]))
-
-# From these plots, the model appears to predict that much of the globe will warm by over 2 degrees by 2099, with some cooling in the southern hemisphere, especially around the Antarctic, and in the northern part of the North Atlantic Ocean. These plots however do not present a reliable method of examining change over time - there is too much variability for any given month, and we need to examine what happens in between.
-
-### 5) Calculating monthly and yearly trends
-
-# Plot monthly trends from 2015 to 2099:
-
-
-
-# plot trends for each month, 2015-99
-
-fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 3, figsize=(19, 15))
-fig.subplots_adjust(hspace=0.3, wspace=0.1)
-list_months=['January','February','March','April','May','June','July','August','September','October','November','December']
-
-for i in range(3):
-    ax=ax1[i]
-    (ds.ts.isel(time=i+40*12)-ds.ts.isel(time=i)).plot(ax=ax,vmin=-3,vmax=3,extend='both', zorder=-3)
-    ax.set_title(list_months[i])
-
-for i in range(3):
-    ax=ax2[i]
-    (ds.ts.isel(time=i+3+40*12)-ds.ts.isel(time=i+3)).plot(ax=ax2[i],vmin=-3,vmax=3,extend='both', zorder=-3)
-    ax.set_title(list_months[i+3])
-
-for i in range(3):
-    ax=ax3[i]
-    (ds.ts.isel(time=i+6+40*12)-ds.ts.isel(time=i+6)).plot(ax=ax,vmin=-3,vmax=3,extend='both', zorder=-3)
-    ax.set_title(list_months[i+6])
-
-for i in range(3):
-    ax=ax4[i]
-    (ds.ts.isel(time=i+9+40*12)-ds.ts.isel(time=i+9)).plot(ax=ax4[i],vmin=-3,vmax=3,extend='both', zorder=-3)
-    ax.set_title(list_months[i+9])
-
-fig.suptitle('Monthly trends: '+str(datevar[0])+' to '+str(datevar[-1]))
-
-# Plot the same difference, but averaged over the year:
-
-
-
-# plot difference between average data for 2015 and 2099
-fig = plt.figure(figsize=(9,6))
-ax = plt.axes(projection=ccrs.Mercator())
-ax.coastlines()
-ax.gridlines()
-(ds_y.ts.sel(year=2099)-ds_y.ts.sel(year=2015)).plot(ax=ax, zorder=-1, transform=ccrs.PlateCarree(), vmin=-3,vmax=3,extend='both', cbar_kwargs={'shrink': 0.4})
-plt.title('difference: 2015 vs 2099')
-
-# Compare these temperature differences with the average 2015-2099 value and the standard deviation.
-
-# Using standard arrays:
-
-
-#Mean
-ts_avg = np.mean(ts, axis=0)
-# calculate mean for all years and months
-ts_avg.shape
-
-#Standard deviation
-ts_std=np.std(ts, axis=0)
-ts_std.shape
-
-#Visualising mean and standard deviation on global scale
-minu = floor(np.min(ts_avg))
-maxu = ceil(np.max(ts_avg))
-
-
-
-
-
-# plot average 2015-2099 values and standard deviation
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 4))
-fig.subplots_adjust(hspace=0.1, wspace=0.1)
-
-im1=ax1.pcolormesh(lon,lat,ts_avg,vmin=270,vmax=290)
-fig.colorbar(im1,ax=ax1)
-ax1.set_title('Temperature average 2015-2099')
-
-im2=ax2.pcolormesh(lon,lat,ts_std,vmin=0,vmax=10)
-fig.colorbar(im2,ax=ax2)
-ax2.set_title('Temperature standard deviation 2015-2099')
 
 
 # Using xarray functionalities:
