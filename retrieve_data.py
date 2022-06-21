@@ -34,7 +34,6 @@ def retrieve_data(temp_res, experiment, variable, model, date):
         zip_ref.extractall('data')
         print("Data files extracted")
     os.remove(file_name)
-    print("Zipped file removed")
 
     dir = os.fsencode('data')
     for file in os.listdir(dir):
