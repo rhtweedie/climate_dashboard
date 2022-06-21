@@ -27,8 +27,8 @@ import matplotlib.ticker as ticker
 from matplotlib.pylab import rcParams
 import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+#import cartopy.crs as ccrs
+#import cartopy.feature as cfeature
 import xarray as xr
 from retrieve_data import retrieve_data
 from math import floor, ceil
