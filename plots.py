@@ -65,6 +65,19 @@ def plot_cities(ds, cities):
     plt.title(f'SSP5_8.5 temperature projections for {labels}')
 
 
+def plot_cities_annual(ds, cities):
+
+    coords = get_coords(cities)
+
+    # timeseries for yearly averages
+    year_annual = (ds['ts']-273.15).groupby('time.year').mean(dim='time')
+    for coord in coords:
+        year_annual.sel(lon = coord[0], lat = coord[1], method = 'nearest').plot.line(x="year")
+    labels = cities
+    plt.legend(labels,loc='lower right')
+    plt.title(f'SSP5_5.8 annual trends for {cities}')
+
+
 def subset_data(datevar, lat, lon):
     # Get indices of time, lat and lon over the area
     years = np.array([idx.year for idx in datevar])
