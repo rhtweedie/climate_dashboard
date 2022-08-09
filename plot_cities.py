@@ -20,7 +20,6 @@ DATE = '2015-01-01/2099-12-31'
 data_fn = 'hadgem3_gc31_ll_ssp5_8_5_data.nc'
 ncset = netcdf.Dataset(data_fn, mode='r')
 
-
 ncset.set_auto_mask(False)
 
 # read variables
