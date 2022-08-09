@@ -1,6 +1,6 @@
 #%%
 
-from plots import plot_cities
+from plots import plot_cities, plot_cities_annual
 from retrieve_data import retrieve_data
 import netCDF4 as netcdf
 import numpy as np
@@ -51,7 +51,7 @@ lat = ds.lat
 lon = ds.lon
 ds_y = ds.groupby('time.year').mean(dim='time')
 
-cities = ["Jerusalem", "Paris", "London"]
+cities = ["Jerusalem", "Stockholm", "Cincinnati"]
 plot_cities(ds, cities)
 
 # %%

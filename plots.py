@@ -49,7 +49,7 @@ def get_coords(cities):
     for city in cities:
         # Get coords of cities
         (lon, lat) = geolocator.geocode(city).longitude,geolocator.geocode(city).latitude
-        coords = coords.append((lon, lat))
+        coords.append((lon, lat))
     return coords
 
 
