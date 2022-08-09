@@ -44,12 +44,10 @@ def get_coords(cities):
     print(location.address)
     print(geolocator.geocode("London").longitude, geolocator.geocode("London").latitude)
 
-    coords = []
-
     for city in cities:
         # Get coords of cities
         (lon, lat) = geolocator.geocode(city).longitude,geolocator.geocode(city).latitude
-        coords.append((lon, lat))
+        coords = [lon, lat]
     return coords
 
 
