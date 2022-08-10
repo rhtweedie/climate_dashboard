@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
+from get_coords import get_coords
 
 
 def plot_monthly_trends(ds, datevar):
@@ -32,14 +33,13 @@ def plot_monthly_trends(ds, datevar):
     fig.suptitle('Monthly trends: '+str(datevar[0])+' to '+str(datevar[-1]))
 
 
-def plot_cities(ds, cities):
+def plot_cities(ds, city):
 
-    coords = get_coords(cities)
+    coords = get_coords(city)
 
     # Get data for coords and plot
-    for coord in coords:
-        (ds.ts.sel(lon = coord[0], lat = coord[1], method = 'nearest')-273.15).plot(x="time")
-    labels = cities
+    coords = (ds.ts.sel(lon = coords[0], lat = coords[1], method = 'nearest')-273.15).plot(x="time")
+    labels = city
     plt.legend(labels,loc='lower right')
     plt.title(f'SSP5_8.5 temperature projections for {labels}')
 

@@ -5,14 +5,11 @@ from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
 import netCDF4 as netcdf
+import xarray as xr
+from plots import get_coords
 
-# retrieve data
-data_fn = 'hadgem3_gc31_ll_ssp5_8_5_data.nc'
-ncset = netcdf.Dataset(data_fn, mode='r')
-ncset.set_auto_mask(False)
-
-data["Date"] = pd.to_datetime(data["Date"], format = "%Y-%m-%d")
-data.sort_values("Date", inplace = True)
+DATA_FN = 'hadgem3_gc31_ll_ssp5_8_5_data.nc'
+CITY = "Sydney"
 
 external_stylesheets = [
     {
@@ -21,21 +18,33 @@ external_stylesheets = [
         "rel": "stylesheet",
     },
 ]
-
 app = dash.Dash(__name__)
-app.title = "Avocado Analytics"
+app.title = "City Temperatures"
+
+# retrieve data
+ncset = netcdf.Dataset(DATA_FN, mode='r')
+ncset.set_auto_mask(False)
+ds = xr.open_dataset(DATA_FN)
+
+# extract individual variables
+temp = ds.variables['ts']
+lat, lon = ds.variables['lat'], ds.variables['lon']
+time = ds.variables['time']
+
+# get temperatures at closest coords to city
+coords = get_coords(CITY)
+temp_closest_coords = (ds.ts.sel(lon = coords[0], lat = coords[1], method = 'nearest') - 273.15).values
+timevals = time[:]
 
 app.layout = html.Div(
     children=[
         html.Div(
             children=[
                 html.H1(
-                    children="Avocado Analytics", className="header-title"
+                    children="City Temperatures", className="header-title"
                 ),
                 html.P(
-                    children="Analyze the behavior of avocado prices"
-                    " and the number of avocados sold in the US"
-                    " between 2015 and 2018",
+                    children="Analyse the predicted temperature of cities from 2015 to 2099",
                     className="header-description",
                 ),
             ],
@@ -44,65 +53,31 @@ app.layout = html.Div(
         html.Div(
             children=[
                 html.Div(
-                    children=[
-                        html.Div(children="Region", className="menu-title"),
-                        dcc.Dropdown(
-                            id="region-filter",
-                            options=[
-                                {"label": region, "value": region}
-                                for region in np.sort(data.region.unique())
-                            ],
-                            value="Albany",
-                            clearable=False,
-                            className="dropdown",
-                        ),
-                    ]
-                ),
-                html.Div(
-                    children=[
-                        html.Div(children="Type", className="menu-title"),
-                        dcc.Dropdown(
-                            id="type-filter",
-                            options=[
-                                {"label": avocado_type, "value": avocado_type}
-                                for avocado_type in data.type.unique()
-                            ],
-                            value="organic",
-                            clearable=False,
-                            searchable=False,
-                            className="dropdown",
-                        ),
-                    ],
-                ),
-                html.Div(
-                    children=[
-                        html.Div(
-                            children="Date Range",
-                            className="menu-title"
-                            ),
-                        dcc.DatePickerRange(
-                            id="date-range",
-                            min_date_allowed=data.Date.min().date(),
-                            max_date_allowed=data.Date.max().date(),
-                            start_date=data.Date.min().date(),
-                            end_date=data.Date.max().date(),
-                        ),
-                    ]
-                ),
-            ],
-            className="menu",
-        ),
-        html.Div(
-            children=[
-                html.Div(
                     children=dcc.Graph(
-                        id="price-chart", config={"displayModeBar": False},
-                    ),
-                    className="card",
-                ),
-                html.Div(
-                    children=dcc.Graph(
-                        id="volume-chart", config={"displayModeBar": False},
+                        id="price-chart",
+                        config={"displayModeBar": False},
+                        figure={
+                            "data": [
+                                {
+                                    "x": "timevals",
+                                    "y": "temp_closest_coords",
+                                    "type": "lines",
+                                    "hovertemplate": "$%{y:.2f}"
+                                                     "<extra></extra>",
+                                },
+                            ],
+                            "layout": {
+                                "title": {
+                                    "text": "Temperature of City",
+                                    "x": 0.05,
+                                    "xanchor": "left",
+                                },
+                                "xaxis": {"fixedrange": False},
+                                "yaxis": {"fixedrange": False},
+
+                                "colorway": ["#17B897"],
+                            },
+                        },
                     ),
                     className="card",
                 ),
@@ -112,6 +87,7 @@ app.layout = html.Div(
     ]
 )
 
+'''
 @app.callback(
     [Output("price-chart", "figure"), Output("volume-chart", "figure")],
     [
@@ -168,7 +144,7 @@ def update_charts(region, avocado_type, start_date, end_date):
     }
 
     return price_chart_figure, volume_chart_figure
-
+'''
 
 if __name__ == "__main__":
     app.run_server(debug = True)

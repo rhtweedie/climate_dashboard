@@ -14,11 +14,11 @@ EXPERIMENT = 'ssp5_8_5'
 VARIABLE = 'surface_temperature'
 MODEL = 'hadgem3_gc31_ll'
 DATE = '2015-01-01/2099-12-31'
+DATA_FN = 'hadgem3_gc31_ll_ssp5_8_5_data.nc'
 
 
 # retrieve data
-data_fn = 'hadgem3_gc31_ll_ssp5_8_5_data.nc'
-ncset = netcdf.Dataset(data_fn, mode='r')
+ncset = netcdf.Dataset(DATA_FN, mode='r')
 
 ncset.set_auto_mask(False)
 
@@ -45,12 +45,13 @@ datevar = cftime.num2date(nctime, units=t_unit, calendar=t_cal)
 
 
 # load data
-ds = xr.open_dataset(data_fn)
+ds = xr.open_dataset(DATA_FN)
 lat = ds.lat
 lon = ds.lon
 ds_y = ds.groupby('time.year').mean(dim='time')
 
-cities = ["Jerusalem", "Stockholm", "Cincinnati"]
+# %%
+cities = ["London"]
 plot_cities(ds, cities)
 
 # %%
