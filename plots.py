@@ -1,7 +1,5 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from geopy.geocoders import Nominatim
-
 
 
 def plot_monthly_trends(ds, datevar):
@@ -32,23 +30,6 @@ def plot_monthly_trends(ds, datevar):
         ax.set_title(list_months[i+9])
 
     fig.suptitle('Monthly trends: '+str(datevar[0])+' to '+str(datevar[-1]))
-
-
-def get_coords(cities):
-    '''Get coordinates for selected cities'''
-
-    #https://github.com/geopy/geopy
-    #https://developers.google.com/maps/documentation/geocoding/overview
-    geolocator = Nominatim(user_agent="Google Geocoding API (V3)")
-    location = geolocator.geocode("London")
-    print(location.address)
-    print(geolocator.geocode("London").longitude, geolocator.geocode("London").latitude)
-
-    for city in cities:
-        # Get coords of cities
-        (lon, lat) = geolocator.geocode(city).longitude,geolocator.geocode(city).latitude
-        coords = [lon, lat]
-    return coords
 
 
 def plot_cities(ds, cities):
@@ -92,3 +73,18 @@ def subset_data(datevar, lat, lon):
     dates_region  = datevar[idx_tim_region]
 
     return lat_region, lon_region, dates_region
+
+def get_data_for_city(ds, ncset, city, lat, lon):
+    coords = get_coords(city)
+
+    latvals = lat[:]
+    lonvals = lon[:]
+
+    # find closest coord to city
+    dist_sq = (lonvals - coords[0]) ** 2 + (latvals - coords[1]) ** 2
+    minindex_flattened = dist_sq.argmin()
+    closet_coord = np.unravel_index(minindex_flattened, lat.shape)
+    
+    ts = ncset['ts'][:]
+
+    return city_temps
