@@ -11,6 +11,11 @@ from plots import get_coords
 DATA_FN = 'hadgem3_gc31_ll_ssp5_8_5_data.nc'
 CITY = "Sydney"
 
+data = pd.read_csv("avocado.csv")
+data = data.query("type == 'conventional' and region == 'Albany'")
+data["Date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
+data.sort_values("Date", inplace=True)
+
 external_stylesheets = [
     {
         "href": "https://fonts.googleapis.com/css2?"
@@ -33,7 +38,8 @@ time = ds.variables['time']
 
 # get temperatures at closest coords to city
 coords = get_coords(CITY)
-temp_closest_coords = (ds.ts.sel(lon = coords[0], lat = coords[1], method = 'nearest') - 273.15).values
+temp_closest_coords = (
+    ds.ts.sel(lon=coords[0], lat=coords[1], method='nearest') - 273.15).values
 timevals = time[:]
 
 app.layout = html.Div(
@@ -54,7 +60,7 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=dcc.Graph(
-                        id="price-chart",
+                        id="temp-chart",
                         config={"displayModeBar": False},
                         figure={
                             "data": [
@@ -75,6 +81,42 @@ app.layout = html.Div(
                                 "xaxis": {"fixedrange": False},
                                 "yaxis": {"fixedrange": False},
 
+                                "colorway": ["#17B897"],
+                            },
+                        },
+                    ),
+                    className="card",
+                ),
+            ],
+            className="wrapper",
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    children=dcc.Graph(
+                        id="price-chart",
+                        config={"displayModeBar": False},
+                        figure={
+                            "data": [
+                                {
+                                    "x": data["Date"],
+                                    "y": data["AveragePrice"],
+                                    "type": "lines",
+                                    "hovertemplate": "$%{y:.2f}"
+                                                     "<extra></extra>",
+                                },
+                            ],
+                            "layout": {
+                                "title": {
+                                    "text": "Average Price of Avocados",
+                                    "x": 0.05,
+                                    "xanchor": "left",
+                                },
+                                "xaxis": {"fixedrange": True},
+                                "yaxis": {
+                                    "tickprefix": "$",
+                                    "fixedrange": True,
+                                },
                                 "colorway": ["#17B897"],
                             },
                         },
@@ -147,4 +189,4 @@ def update_charts(region, avocado_type, start_date, end_date):
 '''
 
 if __name__ == "__main__":
-    app.run_server(debug = True)
+    app.run_server(debug=True)
