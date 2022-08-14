@@ -74,17 +74,8 @@ def subset_data(datevar, lat, lon):
 
     return lat_region, lon_region, dates_region
 
-def get_data_for_city(ds, ncset, city, lat, lon):
+def get_data_for_city(ds, city, lat, lon):
     coords = get_coords(city)
+    temp_closest_coords = (ds.ts.sel(lon = coords[0], lat = coords[1], method = 'nearest') - 273.15).values
 
-    latvals = lat[:]
-    lonvals = lon[:]
-
-    # find closest coord to city
-    dist_sq = (lonvals - coords[0]) ** 2 + (latvals - coords[1]) ** 2
-    minindex_flattened = dist_sq.argmin()
-    closet_coord = np.unravel_index(minindex_flattened, lat.shape)
-    
-    ts = ncset['ts'][:]
-
-    return city_temps
+    return temp_closest_coords
