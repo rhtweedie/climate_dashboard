@@ -4,9 +4,13 @@ from dash import dcc
 from dash.dependencies import Input, Output
 import pandas as pd
 import numpy as np
+import xarray as xr
+import netCDF4 as netcdf
+from plots import get_coords
+import plotly.express as px
 
 data = pd.read_csv("avocado.csv")
-data = data.query("type == 'conventional' and region == 'Albany'")
+data = data.query("type == 'Conventional' and region == 'Albany'")
 data["Date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
 data.sort_values("Date", inplace=True)
 
@@ -21,6 +25,8 @@ app = dash.Dash(__name__)
 app.title = "City Temperatures"
 
 # retrieve data
+DATA_FN = "hadgem3_gc31_ll_ssp5_8_5_data.nc"
+CITY = "Sydney"
 ncset = netcdf.Dataset(DATA_FN, mode='r')
 ncset.set_auto_mask(False)
 ds = xr.open_dataset(DATA_FN)
@@ -35,6 +41,10 @@ coords = get_coords(CITY)
 temp_closest_coords = (
     ds.ts.sel(lon=coords[0], lat=coords[1], method='nearest') - 273.15).values
 timevals = time[:]
+
+df = pd.DataFrame({'Time': timevals, 'Temperature': temp_closest_coords})
+fig = px.line(df, x="Time", y="Temperature",
+              title=f"Predicted Temperature for {CITY}")
 
 app.layout = html.Div(
     children=[
@@ -52,6 +62,7 @@ app.layout = html.Div(
             ],
             className="header",
         ),
+
         html.Div(
             children=[
                 html.Div(
@@ -112,42 +123,10 @@ app.layout = html.Div(
                     ),
                     className="card",
                 ),
-            ],
-            className="wrapper",
-        ),
-        html.Div(
-            children=[
+
                 html.Div(
-                    children=dcc.Graph(
-                        id="price-chart",
-                        config={"displayModeBar": False},
-                        figure={
-                            "data": [
-                                {
-                                    "x": data["Date"],
-                                    "y": data["AveragePrice"],
-                                    "type": "lines",
-                                    "hovertemplate": "$%{y:.2f}"
-                                                     "<extra></extra>",
-                                },
-                            ],
-                            "layout": {
-                                "title": {
-                                    "text": "Average Price of Avocados",
-                                    "x": 0.05,
-                                    "xanchor": "left",
-                                },
-                                "xaxis": {"fixedrange": True},
-                                "yaxis": {
-                                    "tickprefix": "$",
-                                    "fixedrange": True,
-                                },
-                                "colorway": ["#17B897"],
-                            },
-                        },
-                    ),
-                    className="card",
-                ),
+                    children=dcc.Graph(figure=fig)
+                )
             ],
             className="wrapper",
         ),
