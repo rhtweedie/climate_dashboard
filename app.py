@@ -42,8 +42,8 @@ temp_closest_coords = (
     ds.ts.sel(lon=coords[0], lat=coords[1], method='nearest') - 273.15).values
 timevals = time[:]
 
-df = pd.DataFrame({'Time': timevals, 'Temperature': temp_closest_coords})
-fig = px.line(df, x="Time", y="Temperature",
+df = pd.DataFrame({'Year': timevals, 'Temperature': temp_closest_coords})
+fig = px.line(df, x="Year", y="Temperature",
               title=f"Predicted Temperature for {CITY}")
 
 app.layout = html.Div(
@@ -51,12 +51,10 @@ app.layout = html.Div(
         html.Div(
             children=[
                 html.H1(
-                    children="Avocado Analytics", className="header-title"
+                    children="Predicted Temperature", className="header-title"
                 ),
                 html.P(
-                    children="Analyze the behavior of avocado prices"
-                    " and the number of avocados sold in the US"
-                    " between 2015 and 2018",
+                    children=f"Predicted temperatures for {CITY}",
                     className="header-description",
                 ),
             ],
@@ -125,7 +123,8 @@ app.layout = html.Div(
                 ),
 
                 html.Div(
-                    children=dcc.Graph(figure=fig)
+                    children=dcc.Graph(figure=fig),
+                    className="card",
                 )
             ],
             className="wrapper",
