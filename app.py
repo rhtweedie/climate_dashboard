@@ -27,22 +27,22 @@ app.title = "City Temperatures"
 # retrieve data
 DATA_FN = "hadgem3_gc31_ll_ssp5_8_5_data.nc"
 CITY = "Sydney"
-ncset = netcdf.Dataset(DATA_FN, mode='r')
+ncset = netcdf.Dataset(DATA_FN, mode="r")
 ncset.set_auto_mask(False)
 ds = xr.open_dataset(DATA_FN)
 
 # extract individual variables
-temp = ds.variables['ts']
-lat, lon = ds.variables['lat'], ds.variables['lon']
-time = ds.variables['time']
+temp = ds.variables["ts"]
+lat, lon = ds.variables["lat"], ds.variables["lon"]
+time = ds.variables["time"]
 
 # get temperatures at closest coords to city
 coords = get_coords(CITY)
 temp_closest_coords = (
-    ds.ts.sel(lon=coords[0], lat=coords[1], method='nearest') - 273.15).values
+    ds.ts.sel(lon=coords[0], lat=coords[1], method="nearest") - 273.15).values
 timevals = time[:]
 
-df = pd.DataFrame({'Year': timevals, 'Temperature': temp_closest_coords})
+df = pd.DataFrame({"Year": timevals, "Temperature": temp_closest_coords})
 fig = px.line(df, x="Year", y="Temperature",
               title=f"Predicted Temperature for {CITY}")
 
