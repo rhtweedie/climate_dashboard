@@ -26,7 +26,7 @@ app.title = "City Temperatures"
 
 # retrieve data
 DATA_FN = "hadgem3_gc31_ll_ssp5_8_5_data.nc"
-CITY = "Sydney"
+CITY = "London"
 ncset = netcdf.Dataset(DATA_FN, mode="r")
 ncset.set_auto_mask(False)
 ds = xr.open_dataset(DATA_FN)
@@ -46,6 +46,11 @@ df = pd.DataFrame({"Year": timevals, "Temperature": temp_closest_coords})
 fig = px.line(df, x="Year", y="Temperature",
               title=f"Predicted Temperature for {CITY}")
 
+ALLOWED_TYPES = (
+    "text", "number", "password", "email", "search",
+    "tel", "url", "range", "hidden",
+)
+
 app.layout = html.Div(
     children=[
 
@@ -56,7 +61,7 @@ app.layout = html.Div(
                     children="Predicted Temperature", className="header-title"
                 ),
                 html.P(
-                    children=f"Predicted temperatures for {CITY}",
+                    children=f"Predicted Temperatures for {CITY}",
                     className="header-description",
                 ),
             ],
@@ -74,6 +79,16 @@ app.layout = html.Div(
             ],
             className="wrapper",
         ),
+
+        html.Div(
+            [
+                dcc.Input(
+                    id="city_input",
+                    type="text",
+                    placeholder="type city here",
+                )
+            ]
+        )
     ]
 )
 
