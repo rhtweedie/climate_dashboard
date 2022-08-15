@@ -52,12 +52,20 @@ body {
     box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
 }
 
+.tent-input {
+    height: 64px;
+    width: 240px;
+    display: flex;
+    align-content: center;
+}
+
 .Select-control {
     width: 256px;
     height: 48px;
 }
 
-.Select--single > .Select-control .Select-value, .Select-placeholder {
+.Select--single>.Select-control .Select-value,
+.Select-placeholder {
     line-height: 48px;
 }
 

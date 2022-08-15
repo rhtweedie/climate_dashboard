@@ -70,6 +70,17 @@ app.layout = html.Div(
 
         html.Div(
             children=[
+                dcc.Input(
+                    id="city_input",
+                    type="text",
+                    placeholder="enter city here",
+                )
+            ],
+            className="text-input",
+        ),
+
+        html.Div(
+            children=[
 
                 # temp chart
                 html.Div(
@@ -79,16 +90,6 @@ app.layout = html.Div(
             ],
             className="wrapper",
         ),
-
-        html.Div(
-            [
-                dcc.Input(
-                    id="city_input",
-                    type="text",
-                    placeholder="type city here",
-                )
-            ]
-        )
     ]
 )
 
