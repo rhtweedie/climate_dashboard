@@ -36,15 +36,6 @@ temp = ds.variables["ts"]
 lat, lon = ds.variables["lat"], ds.variables["lon"]
 time = ds.variables["time"]
 
-# get temperatures at closest coords to city
-coords = get_coords(CITY)
-temp_closest_coords = (
-    ds.ts.sel(lon=coords[0], lat=coords[1], method="nearest") - 273.15).values
-timevals = time[:]
-
-df = pd.DataFrame({"Year": timevals, "Temperature": temp_closest_coords})
-fig = px.line(df, x="Year", y="Temperature",
-              title=f"Predicted Temperature for {CITY}")
 
 ALLOWED_TYPES = (
     "text", "number", "password", "email", "search",
@@ -71,7 +62,7 @@ app.layout = html.Div(
         html.Div(
             children=[
                 dcc.Input(
-                    id="city_input",
+                    id="text-input",
                     type="text",
                     placeholder="enter city here",
                 )
@@ -81,10 +72,9 @@ app.layout = html.Div(
 
         html.Div(
             children=[
-
-                # temp chart
                 html.Div(
-                    children=dcc.Graph(figure=fig),
+                    children=dcc.Graph(
+                        id="temp-chart", config={"displayModeBar": False}),
                     className="card",
                 )
             ],
@@ -92,6 +82,51 @@ app.layout = html.Div(
         ),
     ]
 )
+
+
+@app.callback(
+    [Output("temp-chart", "figure")],
+    [Input("text-input", "text")],
+)
+def update_charts(city):
+
+    # get temperatures at closest coords to city
+    coords = get_coords(city)
+    temp_closest_coords = (
+        ds.ts.sel(lon=coords[0], lat=coords[1], method="nearest") - 273.15).values
+    timevals = time[:]
+
+    '''
+    df = pd.DataFrame({"Year": timevals, "Temperature": temp_closest_coords})
+    temp_chart = {px.line(
+        df, x="Year", y="Temperature", title=f"Predicted Temperature for {city}")}
+
+    return temp_chart
+    '''
+
+    price_chart_figure = {
+        "data": [
+            {
+                "x": timevals,
+                "y": temp_closest_coords,
+                "type": "lines",
+                # "hovertemplate": "$%{y:.2f}<extra></extra>",
+            },
+        ],
+        "layout": {
+            "title": {
+                "text": "Average Price of Avocados",
+                "x": 0.05,
+                "xanchor": "left",
+            },
+            "xaxis": {"fixedrange": True},
+            "yaxis": {"tickprefix": "$", "fixedrange": True},
+            "colorway": ["#17B897"],
+        },
+    }
+
+    return price_chart_figure
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)
